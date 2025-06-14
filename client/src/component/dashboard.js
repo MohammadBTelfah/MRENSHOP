@@ -65,7 +65,7 @@ function DemoPageContent({ pathname }) {
         textAlign: 'center',
       }}
     >
-      {/* <Typography variant="h6">Dashboard content for: {pathname}</Typography>
+      <Typography variant="h6">Dashboard content for: {pathname}</Typography>
       <button
         onClick={handleLogout}
         style={{
@@ -79,7 +79,7 @@ function DemoPageContent({ pathname }) {
         }}
       >
         Logout
-      </button> */}
+      </button>
     </Box>
   );
 }
