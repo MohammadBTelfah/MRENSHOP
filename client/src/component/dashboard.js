@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,15 +21,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import { AppProvider } from '@toolpad/core/AppProvider';
 import { DashboardLayout, ThemeSwitcher } from '@toolpad/core/DashboardLayout';
 import { DemoProvider, useDemoRouter } from '@toolpad/core/internal';
+import axios from 'axios';
 
-// Navigation items for sidebar
 const NAVIGATION = [
   { kind: 'header', title: 'Main items' },
-  { segment: 'dashboard', title: 'Dashboard', icon: <DashboardIcon /> },
-  { segment: 'orders', title: 'Orders', icon: <ShoppingCartIcon /> },
+  { segment: 'dashboard', title: 'Dashboard', icon: React.createElement(DashboardIcon) },
+  { segment: 'orders', title: 'Orders', icon: React.createElement(ShoppingCartIcon) },
 ];
 
-// Custom theme
 const demoTheme = createTheme({
   cssVariables: {
     colorSchemeSelector: 'data-toolpad-color-scheme',
@@ -46,29 +45,59 @@ const demoTheme = createTheme({
   },
 });
 
-// Content of the dashboard
 function DemoPageContent({ pathname }) {
   const navigate = useNavigate();
+  const [role, setRole] = useState({});
+
+  useEffect(() => {
+    axios.get('http://127.0.1:5000/api/users/profile', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
+      .then(response => {
+        setRole(response.data.role || 'User');
+      })
+      .catch(error => {
+        console.error('Error fetching user role:', error);
+        setRole('user'); 
+      });
+
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
     navigate('/login');
   };
 
-  return (
-    <Box
-      sx={{
+  return React.createElement(
+    Box,
+    {
+      sx: {
         py: 4,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         textAlign: 'center',
-      }}
-    >
-      <Typography variant="h6">Dashboard content for: {pathname}</Typography>
-      <button
-        onClick={handleLogout}
-        style={{
+      },
+    },
+    React.createElement(Typography, { variant: 'h6', gutterBottom: true }, 'Welcome to the Dashboard'),
+    React.createElement(
+      Typography,
+      { variant: 'body1', gutterBottom: true },
+      'You are logged in as: ',
+      React.createElement('strong', null,
+        role === 'admin' ? 'Admin' :
+        role === 'user' ? 'User' :
+        ''
+      )
+    ),
+    React.createElement(
+      'button',
+      {
+        onClick: handleLogout,
+        style: {
           marginTop: 20,
           padding: '6px 12px',
           cursor: 'pointer',
@@ -76,11 +105,10 @@ function DemoPageContent({ pathname }) {
           color: 'white',
           border: 'none',
           borderRadius: '4px',
-        }}
-      >
-        Logout
-      </button>
-    </Box>
+        },
+      },
+      'Logout'
+    )
   );
 }
 
@@ -88,53 +116,55 @@ DemoPageContent.propTypes = {
   pathname: PropTypes.string.isRequired,
 };
 
-// Top right toolbar (search + theme)
 function ToolbarActionsSearch() {
-  return (
-    <Stack direction="row">
-      <Tooltip title="Search" enterDelay={1000}>
-        <div>
-          <IconButton
-            type="button"
-            aria-label="search"
-            sx={{
-              display: { xs: 'inline', md: 'none' },
-            }}
-          >
-            <SearchIcon />
-          </IconButton>
-        </div>
-      </Tooltip>
-      <TextField
-        label="Search"
-        variant="outlined"
-        size="small"
-        slotProps={{
-          input: {
-            endAdornment: (
-              <IconButton type="button" aria-label="search" size="small">
-                <SearchIcon />
-              </IconButton>
-            ),
-            sx: { pr: 0.5 },
+  return React.createElement(
+    Stack,
+    { direction: 'row' },
+    React.createElement(
+      Tooltip,
+      { title: 'Search', enterDelay: 1000 },
+      React.createElement(
+        'div',
+        null,
+        React.createElement(
+          IconButton,
+          {
+            type: 'button',
+            'aria-label': 'search',
+            sx: { display: { xs: 'inline', md: 'none' } },
           },
-        }}
-        sx={{ display: { xs: 'none', md: 'inline-block' }, mr: 1 }}
-      />
-      <ThemeSwitcher />
-    </Stack>
+          React.createElement(SearchIcon)
+        )
+      )
+    ),
+    React.createElement(TextField, {
+      label: 'Search',
+      variant: 'outlined',
+      size: 'small',
+      slotProps: {
+        input: {
+          endAdornment: React.createElement(
+            IconButton,
+            { type: 'button', 'aria-label': 'search', size: 'small' },
+            React.createElement(SearchIcon)
+          ),
+          sx: { pr: 0.5 },
+        },
+      },
+      sx: { display: { xs: 'none', md: 'inline-block' }, mr: 1 },
+    }),
+    React.createElement(ThemeSwitcher)
   );
 }
 
-// Footer for sidebar
 function SidebarFooter({ mini }) {
-  return (
-    <Typography
-      variant="caption"
-      sx={{ m: 1, whiteSpace: 'nowrap', overflow: 'hidden' }}
-    >
-      {mini ? '© MUI' : `© ${new Date().getFullYear()} Made with love by MUI`}
-    </Typography>
+  return React.createElement(
+    Typography,
+    {
+      variant: 'caption',
+      sx: { m: 1, whiteSpace: 'nowrap', overflow: 'hidden' },
+    },
+    mini ? '© MUI' : `© ${new Date().getFullYear()} Made with love by MUI`
   );
 }
 
@@ -142,28 +172,27 @@ SidebarFooter.propTypes = {
   mini: PropTypes.bool.isRequired,
 };
 
-// Custom App Title (logo + label)
 function CustomAppTitle() {
-  return (
-    <Stack direction="row" alignItems="center" spacing={2}>
-      <CloudCircleIcon fontSize="large" color="primary" />
-      <Typography variant="h6">My App</Typography>
-      <Chip size="small" label="BETA" color="info" />
-      <Tooltip title="Connected to production">
-        <CheckCircleIcon color="success" fontSize="small" />
-      </Tooltip>
-    </Stack>
+  return React.createElement(
+    Stack,
+    { direction: 'row', alignItems: 'center', spacing: 2 },
+    React.createElement(CloudCircleIcon, { fontSize: 'large', color: 'primary' }),
+    React.createElement(Typography, { variant: 'h6' }, 'My App'),
+    React.createElement(Chip, { size: 'small', label: 'BETA', color: 'info' }),
+    React.createElement(
+      Tooltip,
+      { title: 'Connected to production' },
+      React.createElement(CheckCircleIcon, { color: 'success', fontSize: 'small' })
+    )
   );
 }
 
-// Main Dashboard component
 function DashboardLayoutSlots(props) {
   const { window } = props;
   const navigate = useNavigate();
   const router = useDemoRouter('/dashboard');
   const demoWindow = window !== undefined ? window() : undefined;
 
-  // 🔐 Redirect to /login if no token
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -171,25 +200,29 @@ function DashboardLayoutSlots(props) {
     }
   }, [navigate]);
 
-  return (
-    <DemoProvider window={demoWindow}>
-      <AppProvider
-        navigation={NAVIGATION}
-        router={router}
-        theme={demoTheme}
-        window={demoWindow}
-      >
-        <DashboardLayout
-          slots={{
+  return React.createElement(
+    DemoProvider,
+    { window: demoWindow },
+    React.createElement(
+      AppProvider,
+      {
+        navigation: NAVIGATION,
+        router: router,
+        theme: demoTheme,
+        window: demoWindow,
+      },
+      React.createElement(
+        DashboardLayout,
+        {
+          slots: {
             appTitle: CustomAppTitle,
             toolbarActions: ToolbarActionsSearch,
             sidebarFooter: SidebarFooter,
-          }}
-        >
-          <DemoPageContent pathname={router.pathname} />
-        </DashboardLayout>
-      </AppProvider>
-    </DemoProvider>
+          },
+        },
+        React.createElement(DemoPageContent, { pathname: router.pathname })
+      )
+    )
   );
 }
 

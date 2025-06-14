@@ -17,7 +17,8 @@ export default function Login() {
       console.log("login successful:", res.data);
 
       // ✅ 1. خزن التوكن في localStorage
-      localStorage.setItem('token', res.data.token || 'mock-token');
+      localStorage.setItem('token', res.data.token || 'mock-token' );
+      localStorage.setItem('role', res.data.role || 'user'); // خزن الدور إذا كان موجودًا
 
       alert("Login successful");
 
